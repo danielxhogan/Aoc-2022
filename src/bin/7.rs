@@ -1,16 +1,12 @@
 use core::str::Lines;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-struct File {
-    name: String,
-    size: usize,
-}
-
+type File = HashMap<String, usize>;
 type Ref = Rc<RefCell<Dir>>;
 
 struct Dir {
     name: String,
-    files: Vec<File>,
+    files: File,
     dirs: HashMap<String, DirRef>,
     parent: Option<Ref>,
     size: usize,
@@ -24,7 +20,7 @@ impl DirRef {
     fn new(name: String, parent: Option<Ref>) -> DirRef {
         let new_dir = Dir {
             name,
-            files: Vec::new(),
+            files: HashMap::new(),
             dirs: HashMap::new(),
             parent,
             size: 0,
@@ -53,7 +49,31 @@ impl DirRef {
     }
 
     pub fn add_file(&self, size: usize, name: String) -> Result<(), String> {
-        Ok(())
+        let mut dir = self.dir.borrow_mut();
+        let existing_file = dir.files.get("name");
+
+        match existing_file {
+            Some(_) => Err("file with this name already exists".to_string()),
+            None => {
+                dir.files.insert(name, size);
+                dir.size += size;
+
+                let mut current_dir = dir.parent.clone();
+
+                loop {
+                    match current_dir {
+                        Some(cd) => {
+                            let mut cd_borrow = cd.borrow_mut();
+                            cd_borrow.size += size;
+                            current_dir = cd_borrow.parent.clone();
+                        }
+                        None => break,
+                    }
+                }
+
+                Ok(())
+            }
+        }
     }
 
     pub fn get_parent(&self) -> Option<DirRef> {
@@ -114,15 +134,21 @@ fn main() {
     let fs = fs.dir.borrow();
 
     let root_file = &fs.name;
+    let root_size = &fs.size;
     let first_child = fs.dirs.get("dpbwg").unwrap();
     let first_child = first_child.dir.borrow();
     let first_name = &first_child.name;
+    let first_size = &first_child.size;
 
     let second_child = first_child.dirs.get("dgh").unwrap();
     let second_child = second_child.dir.borrow();
     let second_name = &second_child.name;
+    let second_size = &second_child.size;
 
     println!("{root_file:?}");
+    println!("{root_size:?}");
     println!("{first_name:?}");
+    println!("{first_size:?}");
     println!("{second_name:?}");
+    println!("{second_size:?}");
 }
