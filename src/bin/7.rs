@@ -2,22 +2,22 @@ use core::str::Lines;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 type File = HashMap<String, usize>;
-type Ref = Rc<RefCell<Dir>>;
+type RefDir = Rc<RefCell<Dir>>;
 
 struct Dir {
     name: String,
     files: File,
     dirs: HashMap<String, DirRef>,
-    parent: Option<Ref>,
+    parent: Option<RefDir>,
     size: usize,
 }
 
 struct DirRef {
-    dir: Ref,
+    dir: RefDir,
 }
 
 impl DirRef {
-    fn new(name: String, parent: Option<Ref>) -> DirRef {
+    fn new(name: String, parent: Option<RefDir>) -> DirRef {
         let new_dir = Dir {
             name,
             files: HashMap::new(),
@@ -32,7 +32,6 @@ impl DirRef {
     }
 
     fn add_dir(&mut self, new_dir: String) -> Result<(), String> {
-        println!("{}", &new_dir);
         let mut dir = self.dir.borrow_mut();
         let existing_dir = dir.dirs.get(&new_dir);
 
@@ -115,6 +114,7 @@ fn build_fs(lines: &mut Lines) -> Option<DirRef> {
             let mut parts = line.split(" ");
             parts.next();
             let dir = parts.next()?;
+
             let _ = current_dir.add_dir(dir.to_string());
         } else if !line.starts_with("$ ls") {
             let mut parts = line.split(" ");
@@ -128,27 +128,61 @@ fn build_fs(lines: &mut Lines) -> Option<DirRef> {
     Some(root.clone())
 }
 
+// part 1
+fn at_most_100000(total_size: &mut usize, dir_ref: &DirRef) {
+    let dir_borrow = dir_ref.dir.borrow();
+
+    if dir_borrow.size <= 100000 {
+        *total_size += dir_borrow.size;
+    }
+
+    let mut children = dir_borrow.dirs.values();
+
+    while let Some(child) = children.next() {
+        at_most_100000(total_size, child);
+    }
+}
+
+// part 2
+fn at_least_6233734(deletion_candidates: &mut Vec<DirRef>, dir_ref: &DirRef) {
+    let dir_borrow = dir_ref.dir.borrow();
+
+    if dir_borrow.size >= 6233734 {
+        deletion_candidates.push(dir_ref.clone());
+    }
+
+    let mut children = dir_borrow.dirs.values();
+
+    while let Some(child) = children.next() {
+        at_least_6233734(deletion_candidates, child);
+    }
+}
+
 fn main() {
     let mut lines = include_str!("../input/7.txt").lines();
     let fs = build_fs(&mut lines).unwrap();
-    let fs = fs.dir.borrow();
 
-    let root_file = &fs.name;
-    let root_size = &fs.size;
-    let first_child = fs.dirs.get("dpbwg").unwrap();
-    let first_child = first_child.dir.borrow();
-    let first_name = &first_child.name;
-    let first_size = &first_child.size;
+    // part 1
+    let mut total_size = 0;
+    at_most_100000(&mut total_size, &fs);
+    println!("total_size: {total_size:?}");
 
-    let second_child = first_child.dirs.get("dgh").unwrap();
-    let second_child = second_child.dir.borrow();
-    let second_name = &second_child.name;
-    let second_size = &second_child.size;
+    // part 2
+    let mut deletion_candidates: Vec<DirRef> = Vec::new();
+    at_least_6233734(&mut deletion_candidates, &fs);
 
-    println!("{root_file:?}");
-    println!("{root_size:?}");
-    println!("{first_name:?}");
-    println!("{first_size:?}");
-    println!("{second_name:?}");
-    println!("{second_size:?}");
+    let mut min_size = usize::MAX;
+    let mut min_folder = "".to_string();
+
+    for candidate in deletion_candidates.iter() {
+        let dir_borrow = candidate.dir.borrow();
+        println!("dir: {}, size: {}", dir_borrow.name, dir_borrow.size);
+
+        if dir_borrow.size < min_size {
+            min_size = dir_borrow.size;
+            min_folder = dir_borrow.name.clone();
+        }
+    }
+
+    println!("min folder: {}", min_folder);
 }
