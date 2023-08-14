@@ -80,11 +80,9 @@ fn main() {
             // calc_score(op_choice, my_choice)
 
             // part 2
-            let outcome = to_rnd_outcome(c2)
-                    .expect("character should be either X, Y, or Z");
-            
-            calc_score(op_choice, outcome)
+            let outcome = to_rnd_outcome(c2).expect("character should be either X, Y, or Z");
 
+            calc_score(op_choice, outcome)
         })
         .sum::<u32>();
 

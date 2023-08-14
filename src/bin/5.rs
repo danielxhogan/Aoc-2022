@@ -1,6 +1,6 @@
 use core::str::Lines;
-use std::collections::{HashMap, VecDeque};
 use std::cell::RefCell;
+use std::collections::{HashMap, VecDeque};
 
 type MoveInstruction = (u32, u32, u32);
 
@@ -43,12 +43,20 @@ fn organize_data(lines: &mut Lines<'_>) -> HashMap<u32, RefCell<VecDeque<char>>>
 // part 1
 fn move_containers(line: &str, cols: &mut HashMap<u32, RefCell<VecDeque<char>>>) {
     let instructions = parse_instructions(line).unwrap();
-    let mut col1 = cols.get(&instructions.1).expect("column moving from exists").borrow_mut();
-    let mut col2 = cols.get(&instructions.2).expect("column moving to exitsts").borrow_mut();
+    let mut col1 = cols
+        .get(&instructions.1)
+        .expect("column moving from exists")
+        .borrow_mut();
+    let mut col2 = cols
+        .get(&instructions.2)
+        .expect("column moving to exitsts")
+        .borrow_mut();
     let mut moving_container: char;
-    
+
     for _ in 0..instructions.0 {
-        moving_container = col1.pop_back().expect("the column removing has containers to remove");
+        moving_container = col1
+            .pop_back()
+            .expect("the column removing has containers to remove");
         col2.push_back(moving_container);
     }
 }
@@ -56,14 +64,22 @@ fn move_containers(line: &str, cols: &mut HashMap<u32, RefCell<VecDeque<char>>>)
 // part 2
 fn move_containers2(line: &str, cols: &mut HashMap<u32, RefCell<VecDeque<char>>>) {
     let instructions = parse_instructions(line).unwrap();
-    let mut col1 = cols.get(&instructions.1).expect("column moving from exists").borrow_mut();
-    let mut col2 = cols.get(&instructions.2).expect("column moving to exitsts").borrow_mut();
+    let mut col1 = cols
+        .get(&instructions.1)
+        .expect("column moving from exists")
+        .borrow_mut();
+    let mut col2 = cols
+        .get(&instructions.2)
+        .expect("column moving to exitsts")
+        .borrow_mut();
 
     let mut moving_containers: Vec<char> = Vec::new();
     let mut moving_container: char;
-    
+
     for _ in 0..instructions.0 {
-        moving_container = col1.pop_back().expect("the column removing has containers to remove");
+        moving_container = col1
+            .pop_back()
+            .expect("the column removing has containers to remove");
         moving_containers.push(moving_container);
     }
 
@@ -112,7 +128,6 @@ fn main() {
     for i in 1..=cols.len() {
         let x = i as u32;
         let col = cols.get(&x).unwrap().borrow_mut();
-        println!("{}", col[col.len()-1]);
-
+        println!("{}", col[col.len() - 1]);
     }
 }
